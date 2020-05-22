@@ -20,7 +20,7 @@ def RCS(D, fmin, fmax):
     c = 3e8
     r = D/2
     f = np.arange(fmin, fmax+1e6, 1e6)
-    sigma = []
+    sigma, F = [], []
     for i in f:
         lambda_ = c / i
         k = 2 * np.pi / lambda_
@@ -28,11 +28,14 @@ def RCS(D, fmin, fmax):
         for n in range(1,110):
             summa.append((-1) ** n * (n + 0.5) * (b(n, k * r) - a(n, k * r)))
         sigma.append((lambda_ ** 2 / np.pi) * abs(sum(summa)) ** 2)
+        F.append(i)
     w = open('results/task_02_4О-506C_CHURSINA_08.txt', 'w')
     print ('f, [МГц]\tsigma, [м^2]\n', file = w)
-    for i in range(len(f)):
-        print('{0}\t\t{1}\n'.format(f[i] * 1e-6, sigma[i]), file = w)
+    d = dict(zip(F, sigma))
+    for key, value in d.items():
+        print('{0}\t\t{1}\n'.format(key * 1e-6, value), file = w)
     w.close()
+    
     plt.plot(f, sigma)
     plt.grid()
     plt.ylabel(r'$\sigma$, [$м^2$]', fontsize = 18)
@@ -43,13 +46,9 @@ if __name__ == '__main__':
     try: os.mkdir('results')
     except OSError: pass
     r = requests.get('https://jenyay.net/uploads/Student/Modelling/task_02.txt')
-    for i in r.text.splitlines():
-        if re.match(r'8\.', i): z = i 
-    match = list(map(lambda z:float(z), re.findall(r'=(\d+\.?\d*[e-]*\d+)',z)))
-    D, fmin, fmax = match[0], match[1], match[2]
+    z = re.search(r'^8\..+', r.text, flags=re.M)
+    z1 = (z.group().split(';'))
+    D = float(z1[0].split('=')[1])
+    fmin = float(z1[1].split('=')[1])
+    fmax = float(z1[2].split('=')[1])
     RCS(D, fmin, fmax)
-    
-    
-    
-
-    
